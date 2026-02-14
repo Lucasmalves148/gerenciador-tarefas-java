@@ -1,4 +1,4 @@
-package tarefas.Excptions;
+package tarefas.exceptions;
 
 public class TituloInvalidoException extends RuntimeException {
 

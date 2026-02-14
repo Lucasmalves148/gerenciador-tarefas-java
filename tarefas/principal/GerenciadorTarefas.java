@@ -1,35 +1,36 @@
-package tarefas.Principal;
+package tarefas.principal;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import tarefas.Enums.Categoria;
-import tarefas.Enums.Prioridade;
-import tarefas.Enums.Status;
-import tarefas.Excptions.TituloInvalidoException;
+import tarefas.enums.Categoria;
+import tarefas.enums.Prioridade;
+import tarefas.enums.Status;
+import tarefas.exceptions.IdNaoEncontradoException;
+import tarefas.exceptions.TituloInvalidoException;
 
 public class GerenciadorTarefas {
 
-    private List<Tarefa> tarefas = new ArrayList<>();
+    private Set<Tarefa> tarefas = new HashSet<>();
 
     public GerenciadorTarefas() {
-        tarefas = new ArrayList<>();
+        tarefas = new HashSet<>();
     }
 
-    public List<Tarefa> imprimirTodasTarefas() {
+    public Set<Tarefa> imprimirTodasTarefas() {
         return tarefas;
     }
 
-    public Map<Status, List<Tarefa>> imprimirPorStatus() {
+    public Map<Status, Set<Tarefa>> imprimirPorStatus() {
         return tarefas.stream()
-                .collect(Collectors.groupingBy(Tarefa::getStatus, Collectors.toList()));
+                .collect(Collectors.groupingBy(Tarefa::getStatus, Collectors.toSet()));
     }
 
-    public List<Tarefa> adicionarTarefa(List<Tarefa> tarefa) {
+    public Set<Tarefa> adicionarTarefa(Set<Tarefa> tarefa) {
         for (Tarefa t : tarefa) {
             tarefas.add(t);
         }
@@ -59,32 +60,25 @@ public class GerenciadorTarefas {
             throw new TituloInvalidoException("Não é possível um título com menos de 3 dígitos.");
         }
 
-        boolean tituloJaExiste = tarefas.stream()
-
-                .anyMatch(t -> !t.getId().equals(idTarefa) && t.getTitulo().equalsIgnoreCase(novoTitulo));
-
-        if (tituloJaExiste) {
-            throw new TituloInvalidoException(
-                    "Não é possível atualizar para este nomes, pois ele já é uma tarefa existente.");
-        }
-
-        tarefas.stream()
+       Tarefa tarefa = tarefas.stream()
                 .filter(t -> t.getId().equals(idTarefa))
                 .findFirst()
-                .ifPresent(t -> t.setTitulo(novoTitulo));
+                .orElseThrow(() -> new IdNaoEncontradoException("Não foi posível uma tarefa com este id"));
+        
+            tarefa.setTitulo(novoTitulo);
 
     }
 
-    public List<Tarefa> buscarPorId(Long id) {
+    public Set<Tarefa> buscarPorId(Long id) {
         return tarefas.stream()
                 .filter(t -> t.getId().equals(id))
-                .toList();
+                .collect(Collectors.toSet());
     }
 
-    public Map<Categoria, List<Tarefa>> agruparTarefasPorCategoria() {
+    public Map<Categoria, Set<Tarefa>> agruparTarefasPorCategoria() {
 
-        Map<Categoria, List<Tarefa>> tarefaMap = tarefas.stream()
-                .collect(Collectors.groupingBy(Tarefa::getCategoria));
+        Map<Categoria, Set<Tarefa>> tarefaMap = tarefas.stream()
+                .collect(Collectors.groupingBy(Tarefa::getCategoria, Collectors.toSet()));
 
         return tarefaMap;
     }
@@ -107,28 +101,28 @@ public class GerenciadorTarefas {
         return false;
     }
 
-    public List<Tarefa> listarPorStatus(Status status) {
+    public Set<Tarefa> listarPorStatus(Status status) {
         return tarefas.stream()
                 .filter(t -> t.getStatus() == status)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
-    public List<Tarefa> listarPorCategoria(Categoria categoria) {
+    public Set<Tarefa> listarPorCategoria(Categoria categoria) {
         return tarefas.stream()
                 .filter(t -> t.getCategoria() == categoria)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
-    public List<Tarefa> listarPorPrioridade(Prioridade prioridade) {
+    public Set<Tarefa> listarPorPrioridade(Prioridade prioridade) {
         return tarefas.stream()
                 .filter(t -> t.getPrioridade() == prioridade)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
-    public List<Tarefa> listarAtrsados() {
+    public Set<Tarefa> listarAtrsados() {
         return tarefas.stream()
                 .filter(t -> t.getDataVencimento().isBefore(LocalDate.now()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     public void marcarConcluido(Long id) {
@@ -146,58 +140,32 @@ public class GerenciadorTarefas {
                 .ifPresent(t -> t.setStatus(Status.PENDENTE));
     }
 
-    public List<Tarefa> buscarPorTitulo(String titulo) {
+    public Set<Tarefa> buscarPorTitulo(String titulo) {
 
         return tarefas.stream()
                 .filter(t -> t.getTitulo().toLowerCase().contains(titulo.toLowerCase()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
-    public List<Tarefa> buscarPorDescricao(String descricao) {
+    public Set<Tarefa> buscarPorDescricao(String descricao) {
         return tarefas.stream()
                 .filter(t -> t.getDescricao().toLowerCase().contains(descricao.toLowerCase()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
-    public void relatorioGeralDasTarefas() {
-        System.out.println("=== RELATÓRIO GERAL ===\n");
-
-        System.out.println("Total de tarefas: " + quantidadeTotalDeTarefas());
-
-        System.out.println("Pendentes: " + relatorioPendentes().size() +
-                " (" + String.format("%.1f", (relatorioPendentes().size() * 100.0 / relatorioPendentes().size()))
-                + "%)");
-
-        System.out.println("Em andamento: " + relatoriosEmAndamento().size() +
-                " (" + String.format("%.1f", (relatoriosEmAndamento().size() * 100.0 / relatoriosEmAndamento().size()))
-                + "%)");
-
-        System.out.println("Concluídas: " + relatoriosConcluidos() +
-                " (" + String.format("%.1f", (relatoriosConcluidos() * 100.0 / relatoriosConcluidos()))
-                + "%)");
-
-        System.out.println("Atrasadas: " + tarefasAtrasadas());
-        System.out.println("Média por categoria: " + String.format("%.2f", mediaTarefasPorCategoria()));
-        System.out.println("Top 3 categorias: " + topTresCategorias());
-        System.out.println("Tarefa mais antiga não concluída: " + tarefaMaisAntigaNaoConcluida());
-        System.out.println("Tarefa com maior atraso: " + tarefaMaiorAtraso());
-        System.out.println("Estatísticas por prioridade: " + estatisticaPorPrioridade());
-        System.out.println("Quantidade de tipos de status: " + contarTodosStatus());
-    }
-
-    private Map<Status, Long> contarTodosStatus() {
+    public Map<Status, Long> contarTodosStatus() {
         return tarefas.stream()
                 .collect(Collectors.groupingBy(Tarefa::getStatus, Collectors.counting()));
     }
 
-    public List<Tarefa> tarefasAtrasadas() {
+    public Long tarefasAtrasadas() {
         return tarefas.stream()
                 .filter(t -> t.getStatus() != Status.CONCLUIDO && t.getDataVencimento().isBefore(LocalDate.now()))
-                .toList();
+                .count();
 
     }
 
-    private Double mediaTarefasPorCategoria() {
+    protected Double mediaTarefasPorCategoria() {
         // pedi ajuda pro deepseek na parte de return, ele que fez, o restante fui eu
         // mesmo.
         Map<Categoria, Long> contagem = tarefas.stream()
@@ -209,20 +177,14 @@ public class GerenciadorTarefas {
                 .orElse(0);
     }
 
-    public List<Categoria> topTresCategorias() {
+    public Map<Categoria, Long> topTresCategorias() {
 
         // Confesso, CHOREI PRO DEEPSEEK :(
         return tarefas.stream()
-                .collect(Collectors.groupingBy(Tarefa::getCategoria, Collectors.counting()))
-                .entrySet()
-                .stream()
-                .sorted(Map.Entry.<Categoria, Long>comparingByValue().reversed())
-                .limit(3)
-                .map(Map.Entry::getKey)
-                .toList();
+                .collect(Collectors.groupingBy(Tarefa::getCategoria, Collectors.counting()));
         /*
          * return quantidadeDeTarefasPorCategoria().values().stream()
-         * .limit(3).toList();
+         * .limit(3).toSet();
          */
     }
 
@@ -232,38 +194,41 @@ public class GerenciadorTarefas {
                 .count();
     }
 
-    public List<Tarefa> relatorioPendentes() {
+    public Long relatorioPendentes() {
         return tarefas.stream()
                 .filter(t -> t.getStatus() == Status.PENDENTE)
-                .toList();
+                .count();
     }
 
-    public List<Tarefa> relatoriosEmAndamento() {
+    public Long relatoriosEmAndamento() {
         return tarefas.stream()
                 .filter(t -> t.getStatus() == Status.EM_ANDAMENTO)
-                .toList();
+                .count();
     }
 
-    public List<Tarefa> tarefaMaisAntigaNaoConcluida() {
+    public Set<Tarefa> tarefaMaisAntigaNaoConcluida() {
         return tarefas.stream()
                 .filter(t -> t.getStatus() != Status.CONCLUIDO)
                 .min(Comparator.comparing(Tarefa::getDataCriacao))
-                .map(List::of)
-                .orElse(List.of());
+                .map(Set::of)
+                .orElse(Set.of());
     }
 
-    public List<Tarefa> tarefaMaiorAtraso() {
+    public Set<Tarefa> tarefaMaiorAtraso() {
         return tarefas.stream()
                 .filter(t -> t.getStatus() != Status.CONCLUIDO)
                 .min(Comparator.comparing(Tarefa::getDataVencimento))
-                .map(List::of)
-                .orElse(List.of());
+                .map(Set::of)
+                .orElse(Set.of());
     }
 
     public Map<Prioridade, Long> estatisticaPorPrioridade() {
 
         return tarefas.stream()
                 .collect(Collectors.groupingBy(Tarefa::getPrioridade, Collectors.counting()));
+    }
 
+    public Set<Tarefa> getTarefas() {
+        return tarefas;
     }
 }

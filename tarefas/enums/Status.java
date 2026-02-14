@@ -1,4 +1,4 @@
-package tarefas.Enums;
+package tarefas.enums;
 
 public enum Status {
     PENDENTE(3),

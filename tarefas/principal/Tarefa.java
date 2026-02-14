@@ -1,13 +1,10 @@
-package tarefas.Principal;
+package tarefas.principal;
 
 import java.time.LocalDate;
 
-import tarefas.Enums.Categoria;
-import tarefas.Enums.Prioridade;
-import tarefas.Enums.Status;
-
-
-
+import tarefas.enums.Categoria;
+import tarefas.enums.Prioridade;
+import tarefas.enums.Status;
 
 public class Tarefa {
 
@@ -86,10 +83,25 @@ public class Tarefa {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Tarefa tarefa = (Tarefa) o;
+        return titulo.equalsIgnoreCase(tarefa.titulo);
+    }
+
+    @Override
+    public int hashCode() {
+        return titulo.toLowerCase().hashCode();
+    }
+
+    @Override
     public String toString() {
-        return "Tarefa [id=" + id + ", titulo=" + titulo + ", descricao=" + descricao + ", dataCriacao=" + dataCriacao
+        return "[id=" + id + ", titulo=" + titulo + ", descricao=" + descricao + ", dataCriacao=" + dataCriacao
                 + ", dataVencimento=" + dataVencimento + ", prioridade=" + prioridade + ", categoria=" + categoria
-                + ", status=" + status + "]";
+                + ", status=" + status + "]" + "\n";
     }
 
 }
