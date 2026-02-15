@@ -3,6 +3,7 @@ package tarefas.principal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,12 +43,7 @@ public class GerenciadorTarefas {
     }
 
     public void removerTarefa(Long idTarefa) {
-        for (Tarefa t : tarefas) {
-            if (t.getId().equals(idTarefa)) {
-                tarefas.remove(t);
-                break;
-            }
-        }
+        tarefas.removeIf(t -> t.getId().equals(idTarefa));
     }
 
     public void atualizarNomeTarefa(Long idTarefa, String novoTitulo) {
@@ -60,12 +56,12 @@ public class GerenciadorTarefas {
             throw new TituloInvalidoException("Não é possível um título com menos de 3 dígitos.");
         }
 
-       Tarefa tarefa = tarefas.stream()
+        Tarefa tarefa = tarefas.stream()
                 .filter(t -> t.getId().equals(idTarefa))
                 .findFirst()
                 .orElseThrow(() -> new IdNaoEncontradoException("Não foi posível uma tarefa com este id"));
-        
-            tarefa.setTitulo(novoTitulo);
+
+        tarefa.setTitulo(novoTitulo);
 
     }
 
@@ -93,12 +89,10 @@ public class GerenciadorTarefas {
     }
 
     public boolean validarTituloUnico(String titulo) {
-        for (Tarefa t : tarefas) {
-            if (t.getTitulo().equalsIgnoreCase(titulo)) {
-                return true;
-            }
-        }
-        return false;
+
+        return tarefas.stream()
+                .anyMatch(t -> t.getTitulo().equalsIgnoreCase(titulo));
+
     }
 
     public Set<Tarefa> listarPorStatus(Status status) {
@@ -165,7 +159,7 @@ public class GerenciadorTarefas {
 
     }
 
-    protected Double mediaTarefasPorCategoria() {
+    public Double mediaTarefasPorCategoria() {
         // pedi ajuda pro deepseek na parte de return, ele que fez, o restante fui eu
         // mesmo.
         Map<Categoria, Long> contagem = tarefas.stream()
@@ -179,13 +173,17 @@ public class GerenciadorTarefas {
 
     public Map<Categoria, Long> topTresCategorias() {
 
-        // Confesso, CHOREI PRO DEEPSEEK :(
+        //Não consegui fazer sozinho, nem com StackOverFlow, entao tive que usar IA.
         return tarefas.stream()
-                .collect(Collectors.groupingBy(Tarefa::getCategoria, Collectors.counting()));
-        /*
-         * return quantidadeDeTarefasPorCategoria().values().stream()
-         * .limit(3).toSet();
-         */
+                .collect(Collectors.groupingBy(Tarefa::getCategoria, Collectors.counting()))
+                .entrySet().stream()
+                .sorted(Map.Entry.<Categoria, Long>comparingByValue().reversed())
+                .limit(3)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new));
     }
 
     public Long relatoriosConcluidos() {
