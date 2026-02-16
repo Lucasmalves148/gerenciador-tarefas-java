@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import tarefas.enums.Categoria;
 import tarefas.enums.Prioridade;
 import tarefas.enums.Status;
+import tarefas.exceptions.TituloInvalidoException;
 
 public class Tarefa {
 
@@ -21,6 +22,9 @@ public class Tarefa {
 
     public Tarefa(String titulo, String descricao, LocalDate dataVencimento, Prioridade prioridade,
             Categoria categoria) {
+        if (titulo.length() < 3) {
+            throw new TituloInvalidoException("Não é permitido uma tarefa com menos de 3 dígitos como título.");
+        }
         this.id = contador++;
         this.titulo = titulo;
         this.descricao = descricao;

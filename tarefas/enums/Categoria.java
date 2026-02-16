@@ -2,7 +2,7 @@ package tarefas.enums;
 
 public enum Categoria {
     TRABALHO("Trabalho"),
-    ESTUDO("Estudo"),
+    ESTUDOS("Estudos"),
     PESSOAL("Pessoal"),
     SAUDE("Saúde"),
     OUTROS("Outros");

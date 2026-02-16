@@ -31,11 +31,8 @@ public class GerenciadorTarefas {
                 .collect(Collectors.groupingBy(Tarefa::getStatus, Collectors.toSet()));
     }
 
-    public Set<Tarefa> adicionarTarefa(Set<Tarefa> tarefa) {
-        for (Tarefa t : tarefa) {
-            tarefas.add(t);
-        }
-        return tarefas;
+    public void adicionarTarefa(Set<Tarefa> tarefa) {
+        tarefas.addAll(tarefa);
     }
 
     public void adicionarTarefa(Tarefa tarefa) {
@@ -48,21 +45,26 @@ public class GerenciadorTarefas {
 
     public void atualizarNomeTarefa(Long idTarefa, String novoTitulo) {
 
-        if (novoTitulo == null || novoTitulo.isBlank()) {
-            throw new TituloInvalidoException("Não é permitido este título.");
+        try {
+
+            if (novoTitulo == null || novoTitulo.isBlank()) {
+                throw new TituloInvalidoException("Não é permitido este título.");
+            }
+
+            if (novoTitulo.length() < 3) {
+                throw new TituloInvalidoException("Não é possível um título com menos de 3 dígitos.");
+            }
+
+            Tarefa tarefa = tarefas.stream()
+                    .filter(t -> t.getId().equals(idTarefa))
+                    .findFirst()
+                    .orElseThrow(
+                            () -> new IdNaoEncontradoException("Não foi posível encontrar uma tarefa com este id"));
+                            
+            tarefa.setTitulo(novoTitulo);
+        } catch (TituloInvalidoException e) {
+            System.out.println(e.getMessage());
         }
-
-        if (novoTitulo.length() < 3) {
-            throw new TituloInvalidoException("Não é possível um título com menos de 3 dígitos.");
-        }
-
-        Tarefa tarefa = tarefas.stream()
-                .filter(t -> t.getId().equals(idTarefa))
-                .findFirst()
-                .orElseThrow(() -> new IdNaoEncontradoException("Não foi posível uma tarefa com este id"));
-
-        tarefa.setTitulo(novoTitulo);
-
     }
 
     public Set<Tarefa> buscarPorId(Long id) {
@@ -173,7 +175,7 @@ public class GerenciadorTarefas {
 
     public Map<Categoria, Long> topTresCategorias() {
 
-        //Não consegui fazer sozinho, nem com StackOverFlow, entao tive que usar IA.
+        // Não consegui fazer sozinho, nem com StackOverFlow, entao tive que usar IA.
         return tarefas.stream()
                 .collect(Collectors.groupingBy(Tarefa::getCategoria, Collectors.counting()))
                 .entrySet().stream()
